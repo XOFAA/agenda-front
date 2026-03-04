@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-main: 'Inter', sans-serif;
+
+  /* Base */
+  --background-primary: #0b0f14;
+  --background-secondary: #101215;
+  --background-card: #1f2328;
+
+  /* Neon */
+  --primary: #39ff14;
+  --primary-hover: #2ee60f;
+  --primary-soft: #64ff47;
+
+  /* Secondary green */
+  --secondary: #1bad00;
+  --secondary-dark: #0c8900;
+
+  /* Text */
+  --text-primary: #e9ecef;
+  --text-secondary: #a1a1aa;
+  --text-muted: #6c757d;
+
+  /* Interface */
+  --border: #2a2f36;
+  --divider: #2a2f36;
+
+  /* Compatibility aliases used in current styles */
+  --text: var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --line: var(--border);
+  --surface: var(--background-secondary);
+  --surface-soft: var(--background-card);
+
+  --danger: #e02424;
+  --radius: 16px;
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
