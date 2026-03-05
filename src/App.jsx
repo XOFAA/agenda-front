@@ -41,10 +41,28 @@ function matchTimePeriod(isoDate, period) {
   return true;
 }
 
+function normalizeSession(rawSession) {
+  if (!rawSession?.usuario) return rawSession;
+  const tenantIds =
+    Array.isArray(rawSession.usuario.tenantIds) && rawSession.usuario.tenantIds.length
+      ? rawSession.usuario.tenantIds
+      : rawSession.usuario.tenantId
+        ? [rawSession.usuario.tenantId]
+        : [];
+  return {
+    ...rawSession,
+    usuario: {
+      ...rawSession.usuario,
+      tenantIds,
+      tenantId: rawSession.usuario.tenantId || tenantIds[0] || null,
+    },
+  };
+}
+
 function getSession() {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return raw ? normalizeSession(JSON.parse(raw)) : null;
   } catch {
     return null;
   }
@@ -85,10 +103,29 @@ function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [authForm, setAuthForm] = useState({ mode: 'entrar', nome: '', email: '', senha: '' });
   const [reviewForm, setReviewForm] = useState({ nota: 5, comentario: '' });
+  const [ownerTenantId, setOwnerTenantId] = useState('');
 
   const token = session?.accessToken || '';
   const user = session?.usuario || null;
   const isUser = user?.papel === 'USUARIO';
+  const isOwner = user?.papel === 'DONO_TENANT';
+  const ownerTenantIds = useMemo(
+    () =>
+      Array.isArray(user?.tenantIds) && user.tenantIds.length
+        ? user.tenantIds
+        : user?.tenantId
+          ? [user.tenantId]
+          : [],
+    [user?.tenantId, user?.tenantIds],
+  );
+  const ownerTenantOptions = useMemo(
+    () =>
+      ownerTenantIds.map((id) => ({
+        id,
+        nome: tenants.find((tenant) => tenant.id === id)?.nome || `Tenant ${id.slice(-6)}`,
+      })),
+    [ownerTenantIds, tenants],
+  );
   const isDetailPage = currentPage === 'detail';
   const isChampionshipPage = currentPage === 'championship';
   const isHomePage = currentPage === 'home';
@@ -97,13 +134,16 @@ function App() {
     async (path, options = {}) => {
       try {
         setError('');
-        return await apiRequest(path, { token, ...options });
+        const tenantIdHeader =
+          options?.tenantId ??
+          (isOwner && path.startsWith('/tenant') ? ownerTenantId || ownerTenantIds[0] : undefined);
+        return await apiRequest(path, { token, ...options, tenantId: tenantIdHeader });
       } catch (err) {
         setError(`${err.message} (${err.code})`);
         throw err;
       }
     },
-    [token],
+    [isOwner, ownerTenantId, ownerTenantIds, token],
   );
 
   const run = useCallback(async (fn) => {
@@ -178,6 +218,22 @@ function App() {
   useEffect(() => {
     run(loadMyBookings);
   }, [loadMyBookings, run]);
+
+  useEffect(() => {
+    if (!isOwner) {
+      setOwnerTenantId('');
+      return;
+    }
+
+    if (!ownerTenantIds.length) {
+      setOwnerTenantId('');
+      return;
+    }
+
+    if (!ownerTenantIds.includes(ownerTenantId)) {
+      setOwnerTenantId(ownerTenantIds[0]);
+    }
+  }, [isOwner, ownerTenantId, ownerTenantIds]);
 
   const filteredTenants = useMemo(() => {
     const term = search.termo.trim().toLowerCase();
@@ -392,8 +448,9 @@ function App() {
         : { email: authForm.email, senha: authForm.senha };
 
       const result = await request(path, { method: 'POST', body, token: undefined });
-      setSession(result);
-      setSessionStorage(result);
+      const normalized = normalizeSession(result);
+      setSession(normalized);
+      setSessionStorage(normalized);
       setShowAuth(false);
       await loadMyBookings();
     });
@@ -528,6 +585,23 @@ function App() {
           <button className={isHomePage ? 'active' : ''} onClick={goToExplore}>Explorar</button>
           <button className={isHomePage ? 'active' : ''} onClick={goToMyBookings}>Meus Agendamentos</button>
         </nav>
+
+        {isOwner ? (
+          <div className="tenant-switcher">
+            <label htmlFor="tenant-switcher">Arena ativa</label>
+            <select
+              id="tenant-switcher"
+              value={ownerTenantId || ownerTenantOptions[0]?.id || ''}
+              onChange={(event) => setOwnerTenantId(event.target.value)}
+            >
+              {ownerTenantOptions.map((tenant) => (
+                <option key={tenant.id} value={tenant.id}>
+                  {tenant.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
         <div className="auth-actions">
           {user ? (

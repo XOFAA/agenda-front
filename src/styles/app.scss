@@ -147,6 +147,25 @@ a {
   }
 }
 
+.tenant-switcher {
+  display: grid;
+  gap: 0.24rem;
+
+  label {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 700;
+  }
+
+  select {
+    min-width: 220px;
+    border-radius: 10px;
+    padding: 0.45rem 0.6rem;
+  }
+}
+
 .auth-actions .ghost {
   border-radius: 999px;
   padding-inline: 1rem;
@@ -1200,6 +1219,15 @@ button.ghost {
   .search-row {
     grid-template-columns: 1fr 1fr;
   }
+
+  .tenant-switcher {
+    width: 100%;
+
+    select {
+      width: 100%;
+      min-width: 0;
+    }
+  }
 }
 
 @media (max-width: 700px) {
@@ -1240,6 +1268,11 @@ button.ghost {
   .main-header {
     padding-left: 0.85rem;
     padding-right: 0.85rem;
+  }
+
+  .auth-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 
   .content-wrap {

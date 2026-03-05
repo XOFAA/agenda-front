@@ -72,6 +72,8 @@ npm run preview
 - `PATCH /tenant/reservas/:reservaId/confirmar`
 - `GET /tenant/avaliacoes`
 
+Observacao: para dono com multiplos tenants, o front envia `x-tenant-id` automaticamente nas chamadas `/tenant/*` usando o tenant ativo selecionado no header.
+
 ### Admin
 
 - `GET /admin/tenants`

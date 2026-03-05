@@ -22,13 +22,16 @@ function buildUrl(path, query) {
   return url.toString();
 }
 
-export async function apiRequest(path, { method = 'GET', token, body, query } = {}) {
+export async function apiRequest(path, { method = 'GET', token, body, query, tenantId } = {}) {
   const headers = {
     'Content-Type': 'application/json',
   };
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+  if (tenantId) {
+    headers['x-tenant-id'] = tenantId;
   }
 
   const response = await fetch(buildUrl(path, query), {
